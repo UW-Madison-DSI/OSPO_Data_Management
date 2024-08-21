@@ -9,6 +9,7 @@ from github import Github
 from github import Auth
 from github.GithubException import UnknownObjectException
 from psycopg2.extras import execute_values
+from .ospo_db_tools import check_owner, insert_repository_db
 
 def uw_validate_authors(openalex_record, lineage = "https://openalex.org/I135310074"):
     """_Check if an author is from the UW system._

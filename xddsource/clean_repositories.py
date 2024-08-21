@@ -19,11 +19,15 @@ dirty_names = [i[0] for i in repos if i[0] != gdo.clean_repo_name(i[0])]
 
 for i in dirty_names:
     new_name = gdo.clean_repo_name(i)
-    if gdo.check_repository_db(conn, new_name) is None:
+    if gdo.check_repository_db(conn, new_name) is not None:
         update_name_query = """
             UPDATE repositories
             SET url = %s
             WHERE url = %s"""
-        with conn.cursor() as cur:
-            cur.execute(update_name_query, (new_name, i))
-        conn.commit()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(update_name_query, (new_name, i))
+            conn.commit()
+        except Exception as e:
+            print(e)
+            conn.rollback()

@@ -28,7 +28,7 @@ maxhits = 0
 # This will generate a large-ish number of papers and grants.
 gddurl = ("https://geodeepdive.org/api/snippets?"
           + "term=gitlab.com,bitbucket.com,github.com"
-          + "&clean&full_results")
+          + "&clean&full_results&min_acquired=2M")
 
 hits = True
 paperCt = 0

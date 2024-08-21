@@ -4,3 +4,5 @@ xddsource/bin/
 xddsource/gddospo/__pycache__/
 xddsource/lib/
 xddsource/lib64
+
+.env

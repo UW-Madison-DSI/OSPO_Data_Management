@@ -45,4 +45,3 @@ for i in repos:
     except Exception as e:
         conn.rollback()
         print(f"Error for {i[0]}\nException: {e}")
-

@@ -39,7 +39,7 @@ VALUES
 ('OpenAlex Search', 'A search for records using the OpenAlex API.');
 
 -- RESEARCH ENTITIES
-CREATE TABLE publications(
+CREATE TABLE publications (
     publicationid SERIAL PRIMARY KEY,
     doi doi,
     title text,
@@ -57,14 +57,14 @@ CREATE TABLE publications(
     CONSTRAINT singledoi UNIQUE(doi)
 );
 
-CREATE TABLE uwpublications(
+CREATE TABLE uwpublications (
     publicationid INT references publications(publicationid),
     uwrelationid INT references uwrelations(uwrelationid),
     sourceid INT references ospoimportsources(sourceid),
     CONSTRAINT oneuwlink UNIQUE(publicationid, uwrelationid, sourceid)
 );
 
-CREATE TABLE repositorymanager(
+CREATE TABLE repositorymanager (
     managerid SERIAL PRIMARY KEY,
     managername text UNIQUE,
     managerdescription text,
@@ -78,7 +78,7 @@ VALUES
 ('GitLab -- UW', 'Wisconsin''s implementation of GitLab.', 'https://gitlab.uwmadison.com', 'https://gitlab.uwmadison.com/api'),
 ('BitBucket', 'The primary Atlassian code repository', 'https://bitbucket.org', 'https://api.bitbucket.org/2.0');
 
-CREATE TABLE repositoryowners(
+CREATE TABLE repositoryowners (
     ownerid SERIAL PRIMARY KEY,
     ownername text,
     isorganization boolean,
@@ -86,7 +86,7 @@ CREATE TABLE repositoryowners(
     CONSTRAINT onenamemanager UNIQUE(ownername, managerid)
 );
 
-CREATE TABLE repositories(
+CREATE TABLE repositories (
     repositoryid serial primary key,
     url url,
     created_at timestamp,
@@ -108,7 +108,7 @@ CREATE TABLE publicationlinks (
     publicationlinkdescription TEXT,
     CONSTRAINT singlelinktype UNIQUE(publicationlinksource));
 
-INSERT INTO publicationlinks(publicationlinksource, publicationlinkdescription)
+INSERT INTO publicationlinks (publicationlinksource, publicationlinkdescription)
 VALUES
 ('xDD API Scraper', 'A Python toolkit to extract GitHub and other online repository tools'),
 ('User Submitted', 'A user submitted link between code and publication.'),

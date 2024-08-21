@@ -164,7 +164,7 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
         _type_: _description_
     """    
     current_date = datetime.datetime.now()
-    if re.search('github\.com\/.+$', repository) is None:
+    if re.search(r'github\.com\/.+\/.+$', repository) is None:
         # Currently only supports GitHub
         raise ValueError(f"Repository {repository} is not a Github repository. Only Github repositories are supported at this time.")
     else:
@@ -184,7 +184,7 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
                 raise TypeError("The authentication token must be supplied explicitly or set as the environment variable GITHUB_TOKEN.")
         G_AUTH = Auth.Token(auth)
         gi = Github(auth=G_AUTH)
-    repo_string = re.findall(r'(github\.com\/)(.+?)$', repository)[0][1]
+    repo_string = re.findall(r'(github\.com\/)(.+?)$', clean_repo_name(repository))[0][1]
     repo_object = gi.get_repo(repo_string)
     try:
         readme = repo_object.get_readme().decoded_content

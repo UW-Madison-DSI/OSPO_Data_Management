@@ -25,6 +25,8 @@ The `.env` file here is absent, but it should include the following two variable
   * `{"host": "YOURHOST","port": YOURPORT,"database": "DATABASENAME","user": "DATABASEUSER","password": "DATABASEPASSWORD"}`
 * `GITHUB_TOKEN`: A valid github [Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens). Should have the general structure `github_pat_. . .`. 
 
+### File Organization
+
 ```bash
 └── .gitignore
 └── .env
@@ -37,10 +39,6 @@ The `.env` file here is absent, but it should include the following two variable
     └── dbsetup.py
     └── 📁gddospo
         └── __init__.py
-        └── 📁__pycache__
-            └── __init__.cpython-311.pyc
-            └── gdd_tools.cpython-311.pyc
-            └── ospo_db_tools.cpython-311.pyc
         └── gdd_tools.py
         └── ospo_db_tools.py
         └── ospo_uw_tools.py
@@ -49,6 +47,10 @@ The `.env` file here is absent, but it should include the following two variable
     └── ospo_survey.csv
     └── repo.parquet
 ```
+
+### `xddsource`
+
+This set of scripts leverages the Python code in `gddospo` to source data from xDeepDive to source and scrape data from the xDeepDive server to detect articles that may reference GitHub repositories used by University of Wisconsin researchers.
 
 ### The `gddospo` library
 
@@ -71,5 +73,4 @@ These functions are largely used to validate the assignation of "UW-Belonging" t
 #### `gdd_tools`
 
 Functions developed to interact with the xDD system, to check for papers in GeoDeepDive and to then extract links within those papers that reference GitHub repositories.
-
 

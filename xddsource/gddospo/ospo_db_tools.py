@@ -177,7 +177,7 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
         crawl_check = check_last_crawl(conn, repository)
         if crawl_check is not None:
             if current_date - crawl_check[1] < datetime.timedelta(days = delay):
-                raise ValueError("Last crawl date is within less than {delay} days of the current crawl.")
+                raise ValueError(f"Last crawl date is within less than {delay} days of the current crawl.")
         if auth is None:
             auth = os.getenv('GITHUB_TOKEN')
             if auth is None:
@@ -209,17 +209,17 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
                    'issues': repo_object.get_issues().totalCount,
                    'openissues': repo_object.open_issues_count,
                    'forks': repo_object.forks_count,
-                   'watchers': repo_object.watchers}
+                   'raw': json.dumps(repo_object.raw_data)}
     insert_query = """
         INSERT INTO repositorycrawls (repositoryid, crawl_at,
                                       name, description, homepage,
                                       last_pushed, license_name,
                                       readme, stargazers, issues,
-                                      openissues, forks, watchers)
+                                      openissues, forks, raw)
         VALUES
         (%(repositoryid)s, %(crawl_at)s, %(name)s, %(description)s, %(homepage)s,
          %(last_pushed)s, %(license_name)s, %(readme)s,
-         %(stargazers)s, %(issues)s, %(openissues)s, %(forks)s, %(watchers)s)"""
+         %(stargazers)s, %(issues)s, %(openissues)s, %(forks)s, %(raw)s)"""
     with conn.cursor() as cur:
         cur.execute(insert_query, repo_values)
     conn.commit()

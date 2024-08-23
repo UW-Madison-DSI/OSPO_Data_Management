@@ -6,3 +6,4 @@ xddsource/lib/
 xddsource/lib64
 
 .env
+.venv

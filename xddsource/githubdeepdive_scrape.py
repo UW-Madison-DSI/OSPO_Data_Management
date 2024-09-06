@@ -14,6 +14,8 @@ import psycopg2
 import datetime
 import gddospo.ospo_db_tools as gdo
 import gddospo.gdd_tools as gdt
+import pandas as pd
+import json
 
 dotenv.load_dotenv()
 conn_dict = json.loads(os.getenv('OSDB_CONNECT'))
@@ -26,9 +28,9 @@ thing = 0
 maxhits = 0
 
 # This will generate a large-ish number of papers and grants.
-gddurl = ("https://geodeepdive.org/api/snippets?"
+gddurl = ("https://geodeepdive.org/api/v1/snippets?"
           + "term=gitlab.com,bitbucket.com,github.com"
-          + "&clean&full_results&min_acquired=2M")
+          + "&clean&full_results")
 
 hits = True
 paperCt = 0
@@ -54,21 +56,16 @@ while hits:
                     repohits = map(lambda x: gdt.repotest(x), papers['highlight'])
                     repohit = list(repohits)
                     if any(repohit):
-                        for hit in repohit:
-                            if hit is not None:
-                                newid = gdo.add_repo_db(conn, hit['repo'], 'xDD Pipeline Submission')
-                            if newid is not None:
-                                newpub = gdo.add_publication_db(conn, papers.get('doi'), 'xDD Pipeline Submission')
-                                if newpub is not None:
-                                    gdo.link_publication_repository_db(conn, newpub, newid, 'xDD API Scraper')
-                                    print('Linked this publication and repository.')
-                                    resultset['good'].append({'doi': papers.get('doi'), 'highlight': hit})
-                                else:
-                                    print(f"Failed to add {papers.get('doi')} to the database.")
-                                    resultset['bad'].append({'doi': papers.get('doi'), 'highlight': hit})
-                            else:
-                                print(f"Failed to add repository {hit['repo']} to the database.")
-                                resultset['bad'].append({'doi': papers.get('doi'), 'highlight': hit})
+                        outcome = gdo.process_gdd_hit(conn, papers['doi'], papers['highlight'])
+                        if outcome is not None:
+                            with open('failed_extract.json', 'a') as fe:
+                                fe.write(json.dumps(outcome) + '\n')
                 paperCt = paperCt + 1
         else:
             break
+
+df = pd.read_json('failed_extract.json', lines=True)
+
+records = list(map(json.loads, open('failed_extract.json')))
+
+pd.json_normalize(records).to_csv('failed_extract.csv')

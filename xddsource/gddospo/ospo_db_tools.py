@@ -204,6 +204,8 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
                    'homepage': homepage,
                    'last_pushed': repo_object.last_modified_datetime,
                    'license_name': license_name,
+                   'language': json.dumps(repo_object.get_languages()),
+                   'topics': json.dumps(repo_object.get_topics()),
                    'readme': readme,
                    'stargazers': repo_object.stargazers_count,
                    'issues': repo_object.get_issues().totalCount,
@@ -215,11 +217,11 @@ def update_repo_crawl_db(conn, repository, auth = None, delay = 2):
                                       name, description, homepage,
                                       last_pushed, license_name,
                                       readme, stargazers, issues,
-                                      openissues, forks, raw)
+                                      openissues, forks, raw, language, topics)
         VALUES
         (%(repositoryid)s, %(crawl_at)s, %(name)s, %(description)s, %(homepage)s,
          %(last_pushed)s, %(license_name)s, %(readme)s,
-         %(stargazers)s, %(issues)s, %(openissues)s, %(forks)s, %(raw)s)"""
+         %(stargazers)s, %(issues)s, %(openissues)s, %(forks)s, %(raw)s, %(language)s, %(topics)s)"""
     with conn.cursor() as cur:
         cur.execute(insert_query, repo_values)
     conn.commit()
@@ -367,10 +369,14 @@ def check_publication_db(conn, doi):
     check = """SELECT publicationid
                FROM publications
                WHERE doi = %s"""
-    cur.execute(check, (doi,))
-    # There is a constraint on unique URLs
-    pubs = cur.fetchone()
-    cur.close()
+    try:
+        cur.execute(check, (doi,))
+        # There is a constraint on unique URLs
+        pubs = cur.fetchone()
+        cur.close()
+    except Exception as e:
+        print(e)
+        conn.rollback()
     return pubs
 
 def insert_publication_db(conn, doi):
@@ -472,3 +478,52 @@ def get_repository_urls(conn):
         cur.execute(repo_query)
         results = cur.fetchall()
     return list(results)
+
+def process_gdd_hit(conn, doi, highlight):
+    """_Take a geodeepdive result and process its components._
+
+    Args:
+        conn (_type_): _A valid psycopg2 connection._
+        doi (_string_): _A valid DOI_
+        highlight (_list_): _An array of strings that represent text highlights from a GeoDeepDive PDF._
+    """
+    outcome = None
+    valid_repositories = list(map(lambda x: repotest(x), highlight))
+    if any(valid_repositories):
+        for hit in valid_repositories:
+            try:
+                if hit is not None:
+                    newid = add_repo_db(conn, hit['repo'], 'xDD Pipeline Submission')
+                if newid is not None:
+                    update_repo_crawl_db(conn, hit['repo'])
+                    newpub = add_publication_db(conn, doi, 'xDD Pipeline Submission')
+                    if newpub is not None:
+                        link_publication_repository_db(conn, newpub, newid, 'xDD API Scraper')
+                        print('Linked this publication and repository.')
+                    else:
+                        print(f"Failed to add {doi} to the database.")
+                        outcome = {'doi': doi, 'highlight': hit, 'status': 'Invalid publication.'}
+                else:
+                    print(f"Failed to add repository {hit['repo']} to the database.")
+                    outcome = {'doi': doi, 'highlight': hit, 'status': 'Invalid repository name.'}
+            except Exception as e:
+                print(f"Failed to add {hit['repo']} to the database.")
+                outcome = {'doi': doi, 'highlight': hit, 'status': 'Exception Error.'}
+    else:
+        outcome = None
+    return outcome
+
+def repotest(string):
+    """Check to see if a repository is referenced in the paper.
+
+    string A character string returned from geodeepdive highlights.
+    returns None or the string matched.
+    """
+    test = re.search(r'((github)|(gitlab)|(bitbucket)).com\/((\s{0,1})[\w,\-,\_]+\/*){1,2}', string)
+    if test is None:
+        output = {'repo': None, 'highlight': string}
+    else:
+        test_no_space = re.sub(r'\s', '', test[0])
+        test_no_punct = re.sub(r'[^\w\s]$', '', test_no_space)
+        output = {'repo': test_no_punct, 'highlight': string}
+    return output

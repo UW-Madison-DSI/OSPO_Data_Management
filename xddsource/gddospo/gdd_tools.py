@@ -10,8 +10,8 @@ def repotest(string):
     if test is None:
         output = {'repo': None, 'highlight': string}
     else:
-        test_no_space = re.sub('\s', '', test[0])
-        test_no_punct = re.sub('[^\w\s]$', '', test_no_space)
+        test_no_space = re.sub(r'\s', '', test[0])
+        test_no_punct = re.sub(r'[^\w\s]$', '', test_no_space)
         output = {'repo': test_no_punct, 'highlight': string}
     return output
 

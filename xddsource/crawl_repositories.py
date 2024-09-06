@@ -24,15 +24,8 @@ repos = gdo.get_repository_urls(conn)
 unscanned_queries = """SELECT url
                        FROM repositories AS rp
                        LEFT JOIN repositorycrawls AS rpc ON rp.repositoryid = rpc.repositoryid
-                       WHERE rpc.crawl_at IS NULL;"""
-with conn.cursor() as cur:
-    cur.execute(unscanned_queries)
-    repos = cur.fetchall()
+                       WHERE rpc.crawl_at < LOCALTIMESTAMP - INTERVAL '2 week';"""
 
-unscanned_queries = """SELECT url
-                       FROM repositories AS rp
-                       LEFT JOIN repositorycrawls AS rpc ON rp.repositoryid = rpc.repositoryid
-                       WHERE rpc.crawl_at IS NULL;"""
 with conn.cursor() as cur:
     cur.execute(unscanned_queries)
     repos = cur.fetchall()

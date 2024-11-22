@@ -1,5 +1,3 @@
-import psycopg2
-import re
 from pyalex import Works
 import pyalex
 import itertools
@@ -7,7 +5,6 @@ import requests
 import os
 from github import Github
 from github import Auth
-from github.GithubException import UnknownObjectException
 from psycopg2.extras import execute_values
 from .ospo_db_tools import check_owner, insert_repository_db
 

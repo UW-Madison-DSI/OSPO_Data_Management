@@ -41,12 +41,15 @@ def check_repository_url(repo):
         return False
     check_repo = clean_repo_name(repo)
     try:
-        check = requests.head(check_repo)
+        check = requests.head(check_repo, allow_redirects=True)
         if check.status_code == 200:
-            return True
+            if check.url == check_repo:
+                return {"status": True, "redirect": None }    
+            else:
+                return {"status": True, "redirect": check.url }
     except Exception as e:
         print(f'Failed to resolve: {e}')
-    return False
+    return {"status": False, "redirect": None }
 
 def check_repository_db(conn, repo):
     """_Is the repository in the OSPO Database?_
@@ -118,8 +121,21 @@ def update_repo_add_owner(conn, repository, auth = None, update = True, manager 
     repo_string = re.findall(r'(github\.com\/)(.+?)$', repository)[0][1]
     repo_string = re.sub('/$', '', repo_string)
     if re.search('.+/.+$', repo_string):
-        repo_object = gi.get_repo(repo_string)
-        owner = repo_object.owner
+        try:
+            repo_object = gi.get_repo(repo_string)
+            owner = repo_object.owner
+        except UnknownObjectException:
+            bad_repo_query = """
+                INSERT INTO repoqualitychecks (repositoryid, badstatus)
+                VALUES (%s, %s);
+                """
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(bad_repo_query, (repository_id, 404))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            return False
     else:
         owner = gi.get_user(repo_string)
     if owner is not None:
@@ -294,6 +310,26 @@ def add_repository_source(conn, repositoryid, source):
     conn.commit()
     cur.close()
 
+def update_repo_404(conn, repo, verbose = False):
+    repoid = check_repository_db(conn, repo)
+    if repoid:
+        bad_repo_query = """
+            INSERT INTO repoqualitychecks (repositoryid, badstatus)
+            VALUES (%s, 404)
+            ON CONFLICT DO NOTHING;
+            """
+        try:
+            with conn.cursor() as cur:
+                cur.execute(bad_repo_query, (repoid, 404))
+            conn.commit()
+            if verbose:
+                print(f'Repository {repo} is in the database but can''t be found. Updated quality checks.')
+            return {"repository": repoid, "status": 400}
+        except Exception as e:
+            print(f"Failed to update.\n{e}")
+            conn.rollback()
+    
+
 def add_repo_db(conn, repo, source, verbose = True):
     """_Add a repository to the OSPO database_
 
@@ -310,10 +346,6 @@ def add_repo_db(conn, repo, source, verbose = True):
         if verbose:
             print(f'Repository {repo_check} (from {repo}) does not have a valid name.')
         return None
-    if not check_repository_url(repo_check):
-        if verbose:
-            print(f'Repository {repo_check} (from {repo}) does not appear to exist.')
-        return None
     repositoryid = check_repository_db(conn, repo_check)
     if repositoryid is None:
         repositoryid = insert_repository_db(conn, repo_check)
@@ -325,6 +357,24 @@ def add_repo_db(conn, repo, source, verbose = True):
     if isinstance(repositoryid, tuple):
         repositoryid = repositoryid[0]
     add_repository_source(conn, repositoryid, source)
+    check_url = check_repository_url(repo_check)
+    if check_url.get('status') == False:
+        update_repo_404(conn, repo_check)
+        return None
+    elif check_url.get('redirect'):
+        redir_repo_query = """
+                INSERT INTO repoqualitychecks (repositoryid, badstatus, url)
+                VALUES (%s, 301, %s);
+                """
+        try:
+            with conn.cursor() as cur:
+                cur.execute(bad_repo_query, (repositoryid, 301, check_url.get('redirect')))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+        if verbose:
+            print(f'Repository {repo_check} (from {repo}) does not appear to exist.')
+        return None
     return repositoryid
 
 def update_repo_name_db(conn, repository, drop = True):
@@ -506,7 +556,7 @@ def process_gdd_hit(conn, doi, highlight):
                 else:
                     print(f"Failed to add repository {hit['repo']} to the database.")
                     outcome = {'doi': doi, 'highlight': hit, 'status': 'Invalid repository name.'}
-            except Exception as e:
+            except Exception:
                 print(f"Failed to add {hit['repo']} to the database.")
                 outcome = {'doi': doi, 'highlight': hit, 'status': 'Exception Error.'}
     else:

@@ -1,12 +1,30 @@
 [project]
-name = "ospo-data-management"
+name = "ospotools"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "crossrefapi>=1.6.0",
+    "pandas>=2.2.3",
     "psycopg2>=2.9.10",
+    "pyalex>=0.15.1",
     "pyarrow>=18.0.0",
+    "pygithub>=2.5.0",
+    "pytacite>=0.5.1",
+    "pytest>=8.3.4",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
+    "validators>=0.34.0",
 ]
+[tool.pytest.ini_options]
+pythonpath = [
+  "./src"
+]
+addopts = [
+    "--import-mode=importlib",
+]
+testpaths = ["tests/"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

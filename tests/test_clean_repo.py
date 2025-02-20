@@ -1,7 +1,7 @@
-from gddospo.ospo_db_tools import clean_repo_name
+from ospotools.ospo_db_tools import clean_repo_name
 import re
 
-def cleaning_names():
+def test_cleaning_names():
     NAMES = ['htp:/github.cam/robot',
              'robot/package toast.',
              'https://github.com/harrietlau/ Complex- Viscosity',

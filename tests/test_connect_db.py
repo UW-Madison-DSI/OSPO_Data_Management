@@ -1,4 +1,3 @@
-import pytest
 import psycopg2
 import dotenv
 import json
@@ -17,5 +16,3 @@ def test_check_repo():
     object = [odt.check_repository_db(Connector().conn, i) for i in clean_repos]
     assert type(object[0]) is tuple, "This connection should have returned an object."
     assert all([i == object[0] for i in object]), "All repos should be the same, but they aren't."
-
-

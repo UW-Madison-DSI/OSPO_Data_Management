@@ -7,15 +7,12 @@ cited by journal articles in GeoDeepDive.
 
 import json
 import requests
-import re
 import os
 import dotenv
 import psycopg2
-import datetime
-import gddospo.ospo_db_tools as gdo
-import gddospo.gdd_tools as gdt
+import ospotools.ospo_db_tools as gdo
+import ospotools.gdd_tools as gdt
 import pandas as pd
-import json
 
 dotenv.load_dotenv()
 conn_dict = json.loads(os.getenv('OSDB_CONNECT'))
@@ -52,7 +49,7 @@ while hits:
             data = output['success']['data']
             for papers in data:
                 if gdo.check_publication_db(conn, papers['doi']) is None:
-                    print("Running " + papers['doi'])
+                    print(f"Running {papers['doi']} -- paper {paperCt}")
                     repohits = map(lambda x: gdt.repotest(x), papers['highlight'])
                     repohit = list(repohits)
                     if any(repohit):
@@ -61,6 +58,7 @@ while hits:
                             with open('failed_extract.json', 'a') as fe:
                                 fe.write(json.dumps(outcome) + '\n')
                 paperCt = paperCt + 1
+                print(paperCt)
         else:
             break
 

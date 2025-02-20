@@ -7,3 +7,11 @@ xddsource/lib64
 
 .env
 .venv
+
+src/gddospo/__pycache__/
+
+uv.lock
+
+tests/__pycache__/
+
+.vscode/

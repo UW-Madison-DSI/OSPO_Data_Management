@@ -4,11 +4,11 @@ import os
 import re
 import psycopg2
 import pyarrow.parquet as pq
-import gddospo.ospo_db_tools as gdo
+import OSPO_Data_Management.src.ospo_db_tools as gdo
 
 dotenv.load_dotenv()
 conn_dict = json.loads(os.getenv('OSDB_CONNECT'))
-conn_dict['port'] = 5432
+conn_dict['port'] = 54320
 conn = psycopg2.connect(**conn_dict, connect_timeout=5)
 
 repos = pq.read_table('../source_data/repo.parquet').to_pylist()

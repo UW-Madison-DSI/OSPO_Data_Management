@@ -15,3 +15,7 @@ uv.lock
 tests/__pycache__/
 
 .vscode/
+
+src/ospotools/__pycache__/
+
+src/ospotools.egg-info/

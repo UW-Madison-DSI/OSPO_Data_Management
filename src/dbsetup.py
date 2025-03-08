@@ -19,12 +19,5 @@ repos = pq.read_table('source_data/repo.parquet').to_pylist()
 
 # First pass in the owners
 ownerset = set(i.get('owner') for i in repos)
-for i in ownerset:
-    
-# Then pass in the repos
-# Then pass in the crawled data
-
-
-repos.  row_group(0).column(0)
 
 aa = list(filter(lambda x: x.get('owner') == 'Sofia Alejandra Avila Nevarez', repos))

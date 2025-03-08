@@ -19,3 +19,5 @@ tests/__pycache__/
 src/ospotools/__pycache__/
 
 src/ospotools.egg-info/
+
+failed_extract.json

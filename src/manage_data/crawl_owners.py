@@ -1,4 +1,7 @@
 """_Crawl all GitHub repositories stored in the OSPO database with a given delay._
+
+This script is a "helper" script to ensure that all assigned repositories in the
+database have an appropriate "owner" ID. There are some cases where the 
 """
 
 import json
